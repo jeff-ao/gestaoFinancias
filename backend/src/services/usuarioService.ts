@@ -52,6 +52,21 @@ const usuarioService = {
       return { error: "Erro ao buscar usuário" };
     }
   },
+  getUsuarioByUUIID: async (usuario_uuid: string) => {
+    try {
+      if (!usuario_uuid || typeof usuario_uuid !== "string") {
+        return { error: "UUID inválido" };
+      }
+      const usuario = await prisma.usuario.findFirst({
+        where: { uuid: usuario_uuid },
+      });
+      if (!usuario) return { error: "Usuário não encontrado" };
+      return usuario;
+    } catch (error) {
+      console.error("Error in buscarUsuarioPorUUID:", error);
+      return { error: "Erro ao buscar usuário" };
+    }
+  },
 };
 
 export default usuarioService;
