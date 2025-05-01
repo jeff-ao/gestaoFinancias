@@ -4,17 +4,18 @@ import jwt from "jsonwebtoken";
 const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
+  console.log("bateu aqui", email, password);
   if (!email || !password) {
     return res.status(400).send("Email e senha são obrigatórios");
   }
 
-  const token = jwt.sign({ email }, process.env.JWT_SECRET as string, {
+  const token = jwt.sign({ email }, "process.env.JWT_SECRET" as string, {
     expiresIn: "1h",
   });
 
   const refreshToken = jwt.sign(
     { email },
-    process.env.JWT_REFRESH_SECRET as string,
+    "process.env.JWT_REFRESH_SECRET" as string,
     {
       expiresIn: "1d",
     }
@@ -33,11 +34,11 @@ const refreshToken = async (req: Request, res: Response) => {
   try {
     const decoded = jwt.verify(
       token,
-      process.env.JWT_REFRESH_SECRET as string
+      "process.env.JWT_REFRESH_SECRET" as string
     ) as { email: string };
     const newToken = jwt.sign(
       { email: decoded.email },
-      process.env.JWT_SECRET as string,
+      "process.env.JWT_SECRET" as string,
       {
         expiresIn: "1h",
       }
@@ -56,7 +57,7 @@ const verifyToken = async (req: Request, res: Response) => {
   }
 
   try {
-    jwt.verify(token, process.env.JWT_SECRET as string);
+    jwt.verify(token, "process.env.JWT_SECRET" as string);
     res.status(200).send({ message: "Token válido" });
   } catch (err) {
     res.status(403).send({ error: "Token inválido" });
