@@ -7,12 +7,132 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+enum TipoTransacao {
+  entrada
+  saida
+}
+
+enum tipoFrequencia {
+  diaria
+  semanal
+  quinzenal
+  mensal
+  bimestral
+  trimestral
+  semestral
+  anual
+}
+
+model Usuario {
+  id                  Int                   @id @default(autoincrement())
+  uuid                String                @unique @default(uuid())
+  nome                String
+  email               String                @unique
+  senha               String
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @default(now()) @updatedAt
+  Transacao           Transacao[]
+  TransacaoRecorrente TransacaoRecorrente[]
+  ResumoMensal        ResumoMensal[]
+  Parcelamento        Parcelamento[]
+  Categoria           Categoria[]
+}
+
+model MesAno {
+  id           Int            @id @default(autoincrement())
+  uuid         String         @unique @default(uuid())
+  mes          Int
+  ano          Int
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now()) @updatedAt
+  Transacao    Transacao[]
+  ResumoMensal ResumoMensal[]
+
+  @@unique([mes, ano])
+}
+
+model Transacao {
+  id              Int           @id @default(autoincrement())
+  uuid            String        @unique @default(uuid())
+  descricao       String
+  tipo            TipoTransacao
+  valor           Float
+  data            DateTime
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @default(now()) @updatedAt
+  categoria_id    Int
+  usuario_id      Int
+  mesAno_id       Int?
+  parcelamento_id Int?
+
+  Parcelamento Parcelamento? @relation(fields: [parcelamento_id], references: [id], onDelete: Cascade)
+  usuario      Usuario       @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  Categoria    Categoria     @relation(fields: [categoria_id], references: [id])
+  MesAno       MesAno?       @relation(fields: [mesAno_id], references: [id], onDelete: Cascade)
+}
+
+model Categoria {
+  id         Int      @id @default(autoincrement())
+  uuid       String   @unique @default(uuid())
+  nome       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+  usuario_id Int
+
+  usuario             Usuario               @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  Transacao           Transacao[]
+  TransacaoRecorrente TransacaoRecorrente[]
+
+  @@unique([nome, usuario_id])
+}
+
+model TransacaoRecorrente {
+  id           Int            @id @default(autoincrement())
+  uuid         String         @unique @default(uuid())
+  tipo         TipoTransacao
+  frequencia   tipoFrequencia
+  descricao    String
+  valor        Float
+  data         DateTime       @default(now())
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now()) @updatedAt
+  usuario_id   Int
+  categoria_id Int
+
+  usuario   Usuario    @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  Categoria Categoria? @relation(fields: [categoria_id], references: [id], onDelete: Cascade)
+}
+
+model ResumoMensal {
+  id         Int      @id @default(autoincrement())
+  uuid       String   @unique @default(uuid())
+  entrada    Float
+  saida      Float
+  saldo      Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+  usuario_id Int
+  mesAno_id  Int
+
+  MesAno  MesAno  @relation(fields: [mesAno_id], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@unique([mesAno_id, usuario_id], name: "usuario_id_mesAno_id")
+}
+
+model Parcelamento {
+  id            Int      @id @default(autoincrement())
+  uuid          String   @unique @default(uuid())
+  descricao     String
+  data_inicio   DateTime
+  data_fim      DateTime
+  valor         Float
+  qtde_parcelas Int
+  valor_parcela Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+  usuario_id    Int
+
+  Usuario   Usuario     @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  Transacao Transacao[]
 }
